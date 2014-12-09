@@ -36,7 +36,7 @@ module.exports = function (grunt) {
         files: ['<%= config.app %>/scripts/{,*/}*.{js,jsx}'],
         tasks: ['browserify'],
         options: {
-          livereload: 33333
+          livereload: '<%= connect.options.livereload %>'
         }
       },
       jstest: {
@@ -52,7 +52,7 @@ module.exports = function (grunt) {
         ],
         tasks: ['sass'],
         options: {
-          livereload: 33333
+          livereload: '<%= connect.options.livereload %>'
         }
       },
       styles: {
@@ -91,6 +91,18 @@ module.exports = function (grunt) {
       },
       livereload: {
         options: {
+          middleware: function(connect) {
+            return [
+              connect.static('.tmp'),
+              connect().use('/bower_components', connect.static('./bower_components')),
+              connect.static(config.app)
+            ];
+          }
+        }
+      },
+      nitrous: {
+        options: {
+          livereload: false,
           middleware: function(connect) {
             return [
               connect.static('.tmp'),
@@ -393,6 +405,18 @@ module.exports = function (grunt) {
     if (target === 'dist') {
       return grunt.task.run(['build', 'connect:dist:keepalive']);
     }
+    
+    if (target === 'nitrous') {
+      return grunt.task.run([
+        'clean:server',
+        'sass',
+        'browserify',
+        'concurrent:server',
+        'autoprefixer',
+        'connect:nitrous',
+        'watch'
+      ]);
+    }
 
     grunt.task.run([
       'clean:server',
@@ -442,8 +466,6 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('default', [
-    'newer:jshint',
-    'test',
-    'build'
+    'serve:nitrous'
   ]);
 };

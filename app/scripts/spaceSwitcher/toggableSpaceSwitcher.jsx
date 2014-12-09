@@ -70,7 +70,7 @@ var SearcherSpaces = React.createClass({
       text: filter
     });
 
-    this.filter();
+    this.filter(filter);
   },
   handleKeyDown: function(e){
     if(e.which === 8){
@@ -79,11 +79,11 @@ var SearcherSpaces = React.createClass({
       this.resetResults = false;
     }
   },
-  filter: function(){
+  filter: function(value){
     if(this.resetResults){
       events.trigger('filterspaces', '');
     }else{
-      events.trigger('filterspaces', this.state.text);
+      events.trigger('filterspaces', value);
     }
   },
   render: function() {
@@ -115,7 +115,7 @@ var SpaceSwitcherList = React.createClass({
     }
   },
   filterOrganizations: function(textToFilter){
-
+    console.log('filtering by ', textToFilter)
     function filterSpaces(filter){
       return function(organization){
         var spacesFiltered = _.compact(
