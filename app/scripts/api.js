@@ -4,8 +4,8 @@ var events = require('./events');
 function fetch(opts){
   $.ajax(settings.basePath + '/' +opts.path)
     .then(function(response){
-      console.log('Response with id %s', response.id);
-      events.trigger(opts.name, response.data);
+      console.log('Response with length %s', response.length);
+      events.trigger(opts.name, response);
     })
     .fail(function(err){
       events.error(opts.name, err);

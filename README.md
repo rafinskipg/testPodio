@@ -7,13 +7,13 @@ The space switcher is implemented as a React component.
 You can append it to your application by invoking it like this:
 
 ```
-React.render(<SpaceSwitcher endpoint="/_json/spaces.json"/>, DOMElement);
+React.render(<SpaceSwitcher endpoint="spaces.json"/>, DOMElement);
 ```
 
 You can pass in the object with the spaces data instead, if you don't want it to async load the spaces.
 
 ```
-React.render(<SpaceSwitcher spaces={spacesObject} />, DOMElement);
+React.render(<SpaceSwitcher data={spacesObject} />, DOMElement);
 ```
 
 ### Comunication

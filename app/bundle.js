@@ -5,8 +5,8 @@ var events = require('./events');
 function fetch(opts){
   $.ajax(settings.basePath + '/' +opts.path)
     .then(function(response){
-      console.log('Response with id %s', response.id);
-      events.trigger(opts.name, response.data);
+      console.log('Response with length %s', response.length);
+      events.trigger(opts.name, response);
     })
     .fail(function(err){
       events.error(opts.name, err);
@@ -63,19 +63,11 @@ module.exports = {
 var SpaceSwitcher = require('./spaceSwitcher');
 var React = require('react');
 
-var App = React.createClass({displayName: 'App',
-  render: function () {
-    return (
-      React.createElement(RouteHandler, null)
-    );
-  }
-});
-
 function start (element) {
   var App = React.createClass({displayName: 'App',
     render: function () {
       return (
-        React.createElement(SpaceSwitcher, null)
+        React.createElement(SpaceSwitcher, {endpoint: "spaces.json"})
       );
     }
   });
@@ -199,26 +191,65 @@ var SpaceRow = React.createClass({displayName: 'SpaceRow',
   }
 });
 
+var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
+  getInitialState: function() {
+    return this.props.org;
+  },
+  render: function() {
+    return (
+      React.createElement("div", {className: "org"}, 
+        this.state.name
+      )
+    );
+  }
+});
+
+
+var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
+  getInitialState: function() {
+    return {
+      organizations: this.props.organizations
+    }
+  },
+  render: function() {
+    var rows = [];
+    this.state.organizations.forEach(function(org) {
+      rows.push(React.createElement(OrganizationBlock, {org: org}));
+    });
+    return (
+      React.createElement("div", {className: "listWrapper"}, 
+        rows
+      )
+    );
+  }
+});
+
 
 var SpaceSwitcher = React.createClass({displayName: 'SpaceSwitcher',
   getInitialState: function() {
-    //Could be considered to use promises instead event communication,
-    //But this would be reusable for other components
-    events.suscribe('spaces', 'SpaceSwitcher', function(spaces){
-      if(this.isMounted()){
-        this.setState({ 
-          spaces: spaces
-        });
-      }
-    }.bind(this));
+    var defaultValue = this.props.data ? this.props.data : [];
 
-    api.fetch({
-      name: 'spaces',
-      path: 'spaces.json'
-    });
+    //For async load
+    if(this.props.endpoint){
+      //Could be considered to use promises instead event communication,
+      //But this would be reusable for other components
+      events.suscribe('spaces', 'SpaceSwitcher', function(organizations){
+        if(this.isMounted()){
+          this.setState({ 
+            organizations: organizations
+          });
+        }
+      }.bind(this));
+
+      api.fetch({
+        name: 'spaces',
+        path: this.props.endpoint
+      });
+    }
 
     return {
-      spaces: []
+      organizations: defaultValue,
+      opened: false
     };
   },
   handleChange: function(field, event){
@@ -226,18 +257,22 @@ var SpaceSwitcher = React.createClass({displayName: 'SpaceSwitcher',
     nextState[field] = event.target.value;
     this.setState(nextState)
   },
-  render: function() {
-    var self = this;
-    var rows = [];
-    
-    this.state.spaces.forEach(function(space) {
-      rows.push(React.createElement(SpaceRow, {space: space}));
+  handleClick: function(){
+    this.setState({
+      opened: !this.state.opened
     });
+  },
+  render: function() {
+    var content = this.state.opened ? React.createElement(SpaceSwitcherList, {organizations: this.state.organizations}) : null;
+    var iconClass = this.state.opened ? 'glyphicon glyphicon-chevron-up' : 'glyphicon glyphicon-chevron-down';
+    var wrapperClass = this.state.opened ? 'space-switcher-title opened' : 'space-switcher-title closed';
 
     return (
-      React.createElement("div", null, 
-        React.createElement("div", {className: "title"}, "Spaces"), 
-        rows
+      React.createElement("div", {className: "space-switcher"}, 
+        React.createElement("div", {className: wrapperClass, onClick: this.handleClick}, 
+          React.createElement("div", null, "Go to space ", React.createElement("span", {className: iconClass}))
+        ), 
+        content
       )
     );
   }

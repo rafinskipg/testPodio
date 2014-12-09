@@ -1,0 +1,22 @@
+.switcher{
+  padding-top: 5px;
+  font-size: 12px;
+  transition: background 0.3s linear;
+  cursor: pointer;
+  
+  &:hover{
+    //background: #4b89b2;   
+  }
+
+  .space-switcher-title{
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    padding: 5px;
+
+    &.opened{
+      background: white;
+      height: 50px;
+      color: #5092BD;
+    }
+  }
+}

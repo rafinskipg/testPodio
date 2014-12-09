@@ -33,7 +33,7 @@ module.exports = function (grunt) {
         tasks: ['wiredep']
       },
       js: {
-        files: ['<%= config.app %>/scripts/{,*/}*.{js, jsx}'],
+        files: ['<%= config.app %>/scripts/{,*/}*.{js,jsx}'],
         tasks: ['browserify'],
         options: {
           livereload: 33333
@@ -45,6 +45,15 @@ module.exports = function (grunt) {
       },
       gruntfile: {
         files: ['Gruntfile.js']
+      },
+      css: {
+        files: [
+          '<%= config.app %>/styles/*.scss'
+        ],
+        tasks: ['sass'],
+        options: {
+          livereload: 33333
+        }
       },
       styles: {
         files: ['<%= config.app %>/styles/{,*/}*.css'],
@@ -60,6 +69,14 @@ module.exports = function (grunt) {
           '.tmp/styles/{,*/}*.css',
           '<%= config.app %>/images/{,*/}*'
         ]
+      }
+    },
+
+    sass: {
+      dist: {
+        files: {
+          '<%= config.app %>/styles/main.css': '<%= config.app %>/styles/main.scss'
+        }
       }
     },
 
@@ -379,6 +396,7 @@ module.exports = function (grunt) {
 
     grunt.task.run([
       'clean:server',
+      'sass',
       'browserify',
       'concurrent:server',
       'autoprefixer',
@@ -409,6 +427,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
+    'sass',
     'browserify',
     'useminPrepare',
     'concurrent:dist',
