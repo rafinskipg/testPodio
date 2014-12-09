@@ -35,7 +35,17 @@
       margin-bottom: 5px;
       border: 1px solid $borderLight;
       border-radius: 3px;
-      padding: 0px 5px 0px 5px;
+      padding: 5px;
+
+      .glyphicon{
+        margin-right: 5px;
+      }
+
+      input{
+        width: 90%;
+        border: none;
+        outline: none;
+      }
     }
 
     .organization{
@@ -55,17 +65,21 @@
           padding: 5px;
           
           &:active, &:hover{
-            background: rgba(80, 146, 189, 0.27);
+            background: $activeBg;
           }    
         }
 
         .space{
-          font-style: italic;
           padding: 0px 5px 0px 10px;
           color: grey;
 
           &:active, &:hover{
-            background: rgba(80, 146, 189, 0.27);
+            background: $activeBg;
+          }
+
+          .highlighted{
+            font-style: italic;
+            background: yellow;
           }
         }
       }

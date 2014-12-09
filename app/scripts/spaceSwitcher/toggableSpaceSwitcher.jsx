@@ -8,13 +8,10 @@ var MAX_NUMBER_SPACES = 7;
 * Each space result on the list
 **/
 var SpaceRow = React.createClass({
-  getInitialState: function() {
-    return this.props.space;
-  },
   render: function() {
     return (
       <div className="space">
-        {this.state.name}
+        {this.props.space.name}
       </div>
     );
   }
@@ -24,23 +21,20 @@ var SpaceRow = React.createClass({
 * Each organization row on the results.
 */
 var OrganizationBlock = React.createClass({
-  getInitialState: function() {
-    return this.props.org;
-  },
   render: function() {
     var rows = [];
     
-    this.state.spaces.forEach(function(space) {
+    this.props.org.spaces.forEach(function(space) {
       rows.push(<SpaceRow space={space} />);
     });
 
     return (
       <div className="organization row">
         <div className="col-xs-3 column-image">
-          <img src={this.state.image.thumbnail_link}></img>
+          <img src={this.props.org.image.thumbnail_link}></img>
         </div>
         <div className="col-xs-9 column-results">
-          <div className="organization-name">{this.state.name}</div>
+          <div className="organization-name">{this.props.org.name}</div>
           <div className="organization-spaces">
             {rows}
           </div>
@@ -57,9 +51,13 @@ var SearcherSpaces = React.createClass({
   getInitialState: function() {
     //Reset on esc
     events.suscribe('escape', 'SpaceSwitcherSearcher', function(){
-      this.setState({
-        text: ''
-      });
+      this.componentDidMount = function(){
+        console.log('op')
+        this.setState({
+          text: ''
+        })
+      }.bind(this);
+
     }.bind(this));
 
     return {
@@ -71,13 +69,28 @@ var SearcherSpaces = React.createClass({
     this.setState({
       text: filter
     });
-    console.log(filter);
+
+    this.filter();
+  },
+  handleKeyDown: function(e){
+    if(e.which === 8){
+      this.resetResults = true;
+    }else{
+      this.resetResults = false;
+    }
+  },
+  filter: function(){
+    if(this.resetResults){
+      events.trigger('filterspaces', '');
+    }else{
+      events.trigger('filterspaces', this.state.text);
+    }
   },
   render: function() {
     return (
       <div className="space-switcher-searcher-wrapper">
         <span className="glyphicon glyphicon-search"></span>
-        <input type="text" value={this.state.text} onChange={this.handleChange}></input>
+        <input type="text" value={this.state.text} onChange={this.handleChange} onKeyDown={this.handleKeyDown}></input>
       </div>
     );
   }
@@ -89,11 +102,7 @@ var SearcherSpaces = React.createClass({
 **/
 var SpaceSwitcherList = React.createClass({
   getInitialState: function() {
-    events.suscribe('filter', 'SpaceSwitcherList', function(opts){
-      this.setState({
-        organizations: opts.results
-      });
-    });
+    events.suscribe('filterspaces', 'SpaceSwitcherList', this.filterOrganizations.bind(this));
 
     var amountOfSpaces = this.props.originalObj
       .reduce(function(prev, next){ 
@@ -105,6 +114,49 @@ var SpaceSwitcherList = React.createClass({
       amountOfSpaces: amountOfSpaces
     }
   },
+  filterOrganizations: function(textToFilter){
+
+    function filterSpaces(filter){
+      return function(organization){
+        var spacesFiltered = _.compact(
+          organization.spaces
+          .map(function(space){
+            if(space.name.toLowerCase().indexOf(filter.toLowerCase()) != -1){
+              return space;
+            }
+          })
+        );
+
+        organization.spaces = spacesFiltered;
+
+        return organization;
+      }
+    }
+
+    function hasElementsMatching(filter){
+      return function(organization){
+        if(organization.spaces.length > 0 || organization.name.toLowerCase().indexOf(filter.toLowerCase()) != -1){
+          console.log('espaces', organization.spaces)
+          return organization;
+        }
+        
+      }
+    }
+
+    function filter(organizations){
+      return _.compact(
+        _.cloneDeep(organizations)
+        .map(filterSpaces(textToFilter))
+        .map(hasElementsMatching(textToFilter))
+      );
+    }
+
+    var orgsFiltered = textToFilter ? filter(this.props.originalObj) : this.props.originalObj;
+
+    this.setState({
+      organizations: orgsFiltered
+    });
+  },
   render: function() {
     var rows = [];
     this.state.organizations.forEach(function(org) {
@@ -113,7 +165,7 @@ var SpaceSwitcherList = React.createClass({
 
     var searcher = null;
     if(this.state.amountOfSpaces > MAX_NUMBER_SPACES){
-      searcher = <SearcherSpaces organizations={this.state.originalObj} />
+      searcher = <SearcherSpaces />
     }
 
     return (

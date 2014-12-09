@@ -119,7 +119,13 @@ img {
       margin-bottom: 5px;
       border: 1px solid rgba(200, 200, 200, 0.77);
       border-radius: 3px;
-      padding: 0px 5px 0px 5px; }
+      padding: 5px; }
+      .switcher .space-switcher-results .space-switcher-searcher-wrapper .glyphicon {
+        margin-right: 5px; }
+      .switcher .space-switcher-results .space-switcher-searcher-wrapper input {
+        width: 90%;
+        border: none;
+        outline: none; }
     .switcher .space-switcher-results .organization {
       border-top: 1px solid rgba(200, 200, 200, 0.77); }
       .switcher .space-switcher-results .organization .column-image {
@@ -134,8 +140,10 @@ img {
           .switcher .space-switcher-results .organization .column-results .organization-name:active, .switcher .space-switcher-results .organization .column-results .organization-name:hover {
             background: rgba(80, 146, 189, 0.27); }
         .switcher .space-switcher-results .organization .column-results .space {
-          font-style: italic;
           padding: 0px 5px 0px 10px;
           color: grey; }
           .switcher .space-switcher-results .organization .column-results .space:active, .switcher .space-switcher-results .organization .column-results .space:hover {
             background: rgba(80, 146, 189, 0.27); }
+          .switcher .space-switcher-results .organization .column-results .space .highlighted {
+            font-style: italic;
+            background: yellow; }

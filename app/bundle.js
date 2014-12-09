@@ -198,13 +198,10 @@ var MAX_NUMBER_SPACES = 7;
 * Each space result on the list
 **/
 var SpaceRow = React.createClass({displayName: 'SpaceRow',
-  getInitialState: function() {
-    return this.props.space;
-  },
   render: function() {
     return (
       React.createElement("div", {className: "space"}, 
-        this.state.name
+        this.props.space.name
       )
     );
   }
@@ -214,23 +211,20 @@ var SpaceRow = React.createClass({displayName: 'SpaceRow',
 * Each organization row on the results.
 */
 var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
-  getInitialState: function() {
-    return this.props.org;
-  },
   render: function() {
     var rows = [];
     
-    this.state.spaces.forEach(function(space) {
+    this.props.org.spaces.forEach(function(space) {
       rows.push(React.createElement(SpaceRow, {space: space}));
     });
 
     return (
       React.createElement("div", {className: "organization row"}, 
         React.createElement("div", {className: "col-xs-3 column-image"}, 
-          React.createElement("img", {src: this.state.image.thumbnail_link})
+          React.createElement("img", {src: this.props.org.image.thumbnail_link})
         ), 
         React.createElement("div", {className: "col-xs-9 column-results"}, 
-          React.createElement("div", {className: "organization-name"}, this.state.name), 
+          React.createElement("div", {className: "organization-name"}, this.props.org.name), 
           React.createElement("div", {className: "organization-spaces"}, 
             rows
           )
@@ -247,9 +241,13 @@ var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
   getInitialState: function() {
     //Reset on esc
     events.suscribe('escape', 'SpaceSwitcherSearcher', function(){
-      this.setState({
-        text: ''
-      });
+      this.componentDidMount = function(){
+        console.log('op')
+        this.setState({
+          text: ''
+        })
+      }.bind(this);
+
     }.bind(this));
 
     return {
@@ -261,13 +259,28 @@ var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
     this.setState({
       text: filter
     });
-    console.log(filter);
+
+    this.filter();
+  },
+  handleKeyDown: function(e){
+    if(e.which === 8){
+      this.resetResults = true;
+    }else{
+      this.resetResults = false;
+    }
+  },
+  filter: function(){
+    if(this.resetResults){
+      events.trigger('filterspaces', '');
+    }else{
+      events.trigger('filterspaces', this.state.text);
+    }
   },
   render: function() {
     return (
       React.createElement("div", {className: "space-switcher-searcher-wrapper"}, 
         React.createElement("span", {className: "glyphicon glyphicon-search"}), 
-        React.createElement("input", {type: "text", value: this.state.text, onChange: this.handleChange})
+        React.createElement("input", {type: "text", value: this.state.text, onChange: this.handleChange, onKeyDown: this.handleKeyDown})
       )
     );
   }
@@ -279,11 +292,7 @@ var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
 **/
 var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
   getInitialState: function() {
-    events.suscribe('filter', 'SpaceSwitcherList', function(opts){
-      this.setState({
-        organizations: opts.results
-      });
-    });
+    events.suscribe('filterspaces', 'SpaceSwitcherList', this.filterOrganizations.bind(this));
 
     var amountOfSpaces = this.props.originalObj
       .reduce(function(prev, next){ 
@@ -295,6 +304,49 @@ var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
       amountOfSpaces: amountOfSpaces
     }
   },
+  filterOrganizations: function(textToFilter){
+
+    function filterSpaces(filter){
+      return function(organization){
+        var spacesFiltered = _.compact(
+          organization.spaces
+          .map(function(space){
+            if(space.name.toLowerCase().indexOf(filter.toLowerCase()) != -1){
+              return space;
+            }
+          })
+        );
+
+        organization.spaces = spacesFiltered;
+
+        return organization;
+      }
+    }
+
+    function hasElementsMatching(filter){
+      return function(organization){
+        if(organization.spaces.length > 0 || organization.name.toLowerCase().indexOf(filter.toLowerCase()) != -1){
+          console.log('espaces', organization.spaces)
+          return organization;
+        }
+        
+      }
+    }
+
+    function filter(organizations){
+      return _.compact(
+        _.cloneDeep(organizations)
+        .map(filterSpaces(textToFilter))
+        .map(hasElementsMatching(textToFilter))
+      );
+    }
+
+    var orgsFiltered = textToFilter ? filter(this.props.originalObj) : this.props.originalObj;
+
+    this.setState({
+      organizations: orgsFiltered
+    });
+  },
   render: function() {
     var rows = [];
     this.state.organizations.forEach(function(org) {
@@ -303,7 +355,7 @@ var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
 
     var searcher = null;
     if(this.state.amountOfSpaces > MAX_NUMBER_SPACES){
-      searcher = React.createElement(SearcherSpaces, {organizations: this.state.originalObj})
+      searcher = React.createElement(SearcherSpaces, null)
     }
 
     return (
