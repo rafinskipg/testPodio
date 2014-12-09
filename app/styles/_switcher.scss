@@ -26,7 +26,6 @@
   }
 
   .space-switcher-results{
-    color: grey;
     background: white;
     width: 300px;
     box-shadow: 0 1px 3px rgba(0,0,0,.3);
@@ -40,12 +39,12 @@
 
       .column-image{
         padding-top: 5px;
-        border-right: 1px solid rgba(200, 200, 200, 0.77);
       }
 
       .column-results{
         padding: 5px 0px 5px 0px;
-        
+        border-left: 1px solid rgba(200, 200, 200, 0.77);
+
         .organization-name{
           color: #5092BD;
           font-weight: bold;
@@ -56,8 +55,9 @@
           }    
         }
 
-        .place{
-          text-transform: cursive;
+        .space{
+          font-style: italic;
+          padding: 0px 5px 0px 10px;
           color: grey;
 
           &:active, &:hover{

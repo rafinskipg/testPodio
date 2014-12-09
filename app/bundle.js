@@ -196,13 +196,22 @@ var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
     return this.props.org;
   },
   render: function() {
+    var rows = [];
+    
+    this.state.spaces.forEach(function(space) {
+      rows.push(React.createElement(SpaceRow, {space: space}));
+    });
+
     return (
       React.createElement("div", {className: "organization row"}, 
         React.createElement("div", {className: "col-xs-3 column-image"}, 
           React.createElement("img", {src: this.state.image.thumbnail_link})
         ), 
         React.createElement("div", {className: "col-xs-9 column-results"}, 
-          React.createElement("div", {className: "organization-name"}, this.state.name)
+          React.createElement("div", {className: "organization-name"}, this.state.name), 
+          React.createElement("div", {className: "organization-spaces"}, 
+            rows
+          )
         )
       )
     );

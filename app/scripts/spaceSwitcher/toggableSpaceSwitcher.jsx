@@ -20,6 +20,12 @@ var OrganizationBlock = React.createClass({
     return this.props.org;
   },
   render: function() {
+    var rows = [];
+    
+    this.state.spaces.forEach(function(space) {
+      rows.push(<SpaceRow space={space} />);
+    });
+
     return (
       <div className="organization row">
         <div className="col-xs-3 column-image">
@@ -27,6 +33,9 @@ var OrganizationBlock = React.createClass({
         </div>
         <div className="col-xs-9 column-results">
           <div className="organization-name">{this.state.name}</div>
+          <div className="organization-spaces">
+            {rows}
+          </div>
         </div>
       </div>
     );
