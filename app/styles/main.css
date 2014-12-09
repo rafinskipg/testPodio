@@ -85,6 +85,11 @@ body {
 .content {
   margin-top: 100px; }
 
+img {
+  max-width: 100%;
+  width: 100%;
+  height: 100%; }
+
 .switcher {
   padding-top: 5px;
   font-size: 12px;
@@ -93,8 +98,38 @@ body {
   .switcher .space-switcher-title {
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    padding: 5px; }
+    padding: 5px;
+    display: inline-block; }
     .switcher .space-switcher-title.opened {
       background: white;
-      height: 50px;
+      height: 36px;
       color: #5092BD; }
+    .switcher .space-switcher-title .glyphicon {
+      font-size: 11px; }
+  .switcher .space-switcher-results {
+    color: grey;
+    background: white;
+    width: 300px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    max-height: 80vh;
+    overflow-y: scroll;
+    overflow-x: hidden; }
+    .switcher .space-switcher-results .organization {
+      border-top: 1px solid rgba(200, 200, 200, 0.77); }
+      .switcher .space-switcher-results .organization .column-image {
+        padding-top: 5px;
+        border-right: 1px solid rgba(200, 200, 200, 0.77); }
+      .switcher .space-switcher-results .organization .column-results {
+        padding: 5px 0px 5px 0px; }
+        .switcher .space-switcher-results .organization .column-results .organization-name {
+          color: #5092BD;
+          font-weight: bold;
+          padding: 5px; }
+          .switcher .space-switcher-results .organization .column-results .organization-name:active, .switcher .space-switcher-results .organization .column-results .organization-name:hover {
+            background: rgba(80, 146, 189, 0.27); }
+        .switcher .space-switcher-results .organization .column-results .place {
+          text-transform: cursive;
+          color: grey; }
+          .switcher .space-switcher-results .organization .column-results .place:active, .switcher .space-switcher-results .organization .column-results .place:hover {
+            background: rgba(80, 146, 189, 0.27); }

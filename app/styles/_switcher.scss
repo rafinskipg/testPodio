@@ -3,7 +3,7 @@
   font-size: 12px;
   transition: background 0.3s linear;
   cursor: pointer;
-  
+
   &:hover{
     //background: #4b89b2;   
   }
@@ -12,11 +12,60 @@
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     padding: 5px;
+    display: inline-block;
 
     &.opened{
       background: white;
-      height: 50px;
+      height: 36px;
       color: #5092BD;
+    }
+
+    .glyphicon{
+      font-size: 11px;
+    }
+  }
+
+  .space-switcher-results{
+    color: grey;
+    background: white;
+    width: 300px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    padding: 10px;
+    max-height: 80vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+
+    .organization{
+      border-top: 1px solid rgba(200, 200, 200, 0.77);
+
+      .column-image{
+        padding-top: 5px;
+        border-right: 1px solid rgba(200, 200, 200, 0.77);
+      }
+
+      .column-results{
+        padding: 5px 0px 5px 0px;
+        
+        .organization-name{
+          color: #5092BD;
+          font-weight: bold;
+          padding: 5px;
+          
+          &:active, &:hover{
+            background: rgba(80, 146, 189, 0.27);
+          }    
+        }
+
+        .place{
+          text-transform: cursive;
+          color: grey;
+
+          &:active, &:hover{
+            background: rgba(80, 146, 189, 0.27);
+          }
+        }
+      }
+
     }
   }
 }

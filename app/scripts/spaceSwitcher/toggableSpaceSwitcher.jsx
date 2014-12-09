@@ -21,8 +21,13 @@ var OrganizationBlock = React.createClass({
   },
   render: function() {
     return (
-      <div className="org">
-        {this.state.name}
+      <div className="organization row">
+        <div className="col-xs-3 column-image">
+          <img src={this.state.image.thumbnail_link}></img>
+        </div>
+        <div className="col-xs-9 column-results">
+          <div className="organization-name">{this.state.name}</div>
+        </div>
       </div>
     );
   }
@@ -41,7 +46,7 @@ var SpaceSwitcherList = React.createClass({
       rows.push(<OrganizationBlock org={org} />);
     });
     return (
-      <div className="listWrapper">
+      <div className="space-switcher-results">
         {rows}
       </div>
     );

@@ -197,8 +197,13 @@ var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
   },
   render: function() {
     return (
-      React.createElement("div", {className: "org"}, 
-        this.state.name
+      React.createElement("div", {className: "organization row"}, 
+        React.createElement("div", {className: "col-xs-3 column-image"}, 
+          React.createElement("img", {src: this.state.image.thumbnail_link})
+        ), 
+        React.createElement("div", {className: "col-xs-9 column-results"}, 
+          React.createElement("div", {className: "organization-name"}, this.state.name)
+        )
       )
     );
   }
@@ -217,7 +222,7 @@ var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
       rows.push(React.createElement(OrganizationBlock, {org: org}));
     });
     return (
-      React.createElement("div", {className: "listWrapper"}, 
+      React.createElement("div", {className: "space-switcher-results"}, 
         rows
       )
     );
