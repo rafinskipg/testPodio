@@ -162,12 +162,26 @@ module.exports = {
  * SpaceSwitcher sample app
  */
 var app = require('./app.jsx');
+var events = require('./events.js');
+
+function initEvents(){
+  $(window).on('click', function(event){
+    events.trigger('windowClicked', event);
+  });
+
+  $(window).keyup(function(event) {
+    if (event.keyCode == 27) { 
+      events.trigger('escape', event);
+    }
+  });
+}
 
 $(document).ready(function(){
   console.log('Welcome to the demo');
+  initEvents();
   app.start($('.switcher')[0]);
 });
-},{"./app.jsx":2}],6:[function(require,module,exports){
+},{"./app.jsx":2,"./events.js":4}],6:[function(require,module,exports){
 module.exports = {
   basePath : '/_json'
 }
@@ -177,7 +191,12 @@ module.exports = require('./toggableSpaceSwitcher.jsx');
 var events = require('../events');
 var React = require('react');
 var api = require('../api');
+var _ = require('lodash');
+var MAX_NUMBER_SPACES = 7;
 
+/**
+* Each space result on the list
+**/
 var SpaceRow = React.createClass({displayName: 'SpaceRow',
   getInitialState: function() {
     return this.props.space;
@@ -191,6 +210,9 @@ var SpaceRow = React.createClass({displayName: 'SpaceRow',
   }
 });
 
+/*
+* Each organization row on the results.
+*/
 var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
   getInitialState: function() {
     return this.props.org;
@@ -218,11 +240,59 @@ var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
   }
 });
 
+/**
+* Searcher
+**/
+var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
+  getInitialState: function() {
+    //Reset on esc
+    events.suscribe('escape', 'SpaceSwitcherSearcher', function(){
+      this.setState({
+        text: ''
+      });
+    }.bind(this));
 
+    return {
+      text: ''
+    }
+  },
+  handleChange: function(event){
+    var filter = event.target.value;
+    this.setState({
+      text: filter
+    });
+    console.log(filter);
+  },
+  render: function() {
+    return (
+      React.createElement("div", {className: "space-switcher-searcher-wrapper"}, 
+        React.createElement("span", {className: "glyphicon glyphicon-search"}), 
+        React.createElement("input", {type: "text", value: this.state.text, onChange: this.handleChange})
+      )
+    );
+  }
+});
+
+
+/**
+* Space switcher filter and list
+**/
 var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
   getInitialState: function() {
+    events.suscribe('filter', 'SpaceSwitcherList', function(opts){
+      this.setState({
+        organizations: opts.results
+      });
+    });
+
+    var amountOfSpaces = this.props.originalObj
+      .reduce(function(prev, next){ 
+        return prev.spaces.length + next.spaces.length 
+      });
+
     return {
-      organizations: this.props.organizations
+      organizations: this.props.organizations,
+      amountOfSpaces: amountOfSpaces
     }
   },
   render: function() {
@@ -230,27 +300,35 @@ var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
     this.state.organizations.forEach(function(org) {
       rows.push(React.createElement(OrganizationBlock, {org: org}));
     });
+
+    var searcher = null;
+    if(this.state.amountOfSpaces > MAX_NUMBER_SPACES){
+      searcher = React.createElement(SearcherSpaces, {organizations: this.state.originalObj})
+    }
+
     return (
       React.createElement("div", {className: "space-switcher-results"}, 
+        searcher, 
         rows
       )
     );
   }
 });
 
-
 var SpaceSwitcher = React.createClass({displayName: 'SpaceSwitcher',
   getInitialState: function() {
     var defaultValue = this.props.data ? this.props.data : [];
+    var originalObj = _.cloneDeep(defaultValue);
 
-    //For async load
     if(this.props.endpoint){
-      //Could be considered to use promises instead event communication,
-      //But this would be reusable for other components
+      //Could be considered to use promises instead of event communication
       events.suscribe('spaces', 'SpaceSwitcher', function(organizations){
         if(this.isMounted()){
+          originalObj = _.cloneDeep(organizations);
+
           this.setState({ 
-            organizations: organizations
+            organizations: organizations,
+            originalObj: originalObj
           });
         }
       }.bind(this));
@@ -261,29 +339,33 @@ var SpaceSwitcher = React.createClass({displayName: 'SpaceSwitcher',
       });
     }
 
+    //Reset on esc
+    events.suscribe('escape', 'SpaceSwitcher', function(){
+      this.setState({
+        opened: false,
+        organizations: originalObj
+      });
+    }.bind(this));
+
     return {
       organizations: defaultValue,
+      originalObj: originalObj,
       opened: false
     };
   },
-  handleChange: function(field, event){
-    var nextState = {}
-    nextState[field] = event.target.value;
-    this.setState(nextState)
-  },
-  handleClick: function(){
+  changeState: function(){
     this.setState({
       opened: !this.state.opened
     });
   },
   render: function() {
-    var content = this.state.opened ? React.createElement(SpaceSwitcherList, {organizations: this.state.organizations}) : null;
+    var content = this.state.opened ? React.createElement(SpaceSwitcherList, {organizations: this.state.organizations, originalObj: this.state.originalObj}) : null;
     var iconClass = this.state.opened ? 'glyphicon glyphicon-chevron-up' : 'glyphicon glyphicon-chevron-down';
     var wrapperClass = this.state.opened ? 'space-switcher-title opened' : 'space-switcher-title closed';
 
     return (
       React.createElement("div", {className: "space-switcher"}, 
-        React.createElement("div", {className: wrapperClass, onClick: this.handleClick}, 
+        React.createElement("div", {className: wrapperClass, onClick: this.changeState}, 
           React.createElement("div", null, "Go to space ", React.createElement("span", {className: iconClass}))
         ), 
         content
@@ -294,7 +376,7 @@ var SpaceSwitcher = React.createClass({displayName: 'SpaceSwitcher',
 
 
 module.exports = SpaceSwitcher
-},{"../api":1,"../events":4,"react":"react"}],9:[function(require,module,exports){
+},{"../api":1,"../events":4,"lodash":10,"react":"react"}],9:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a

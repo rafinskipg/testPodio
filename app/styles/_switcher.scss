@@ -4,10 +4,6 @@
   transition: background 0.3s linear;
   cursor: pointer;
 
-  &:hover{
-    //background: #4b89b2;   
-  }
-
   .space-switcher-title{
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
@@ -17,7 +13,7 @@
     &.opened{
       background: white;
       height: 36px;
-      color: #5092BD;
+      color: $bluePodio;
     }
 
     .glyphicon{
@@ -34,8 +30,16 @@
     overflow-y: scroll;
     overflow-x: hidden;
 
+    .space-switcher-searcher-wrapper{
+      color: grey;
+      margin-bottom: 5px;
+      border: 1px solid $borderLight;
+      border-radius: 3px;
+      padding: 0px 5px 0px 5px;
+    }
+
     .organization{
-      border-top: 1px solid rgba(200, 200, 200, 0.77);
+      border-top: 1px solid $borderLight;
 
       .column-image{
         padding-top: 5px;
@@ -43,10 +47,10 @@
 
       .column-results{
         padding: 5px 0px 5px 0px;
-        border-left: 1px solid rgba(200, 200, 200, 0.77);
+        border-left: 1px solid $borderLight;
 
         .organization-name{
-          color: #5092BD;
+          color: $bluePodio;
           font-weight: bold;
           padding: 5px;
           

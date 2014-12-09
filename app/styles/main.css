@@ -114,6 +114,12 @@ img {
     max-height: 80vh;
     overflow-y: scroll;
     overflow-x: hidden; }
+    .switcher .space-switcher-results .space-switcher-searcher-wrapper {
+      color: grey;
+      margin-bottom: 5px;
+      border: 1px solid rgba(200, 200, 200, 0.77);
+      border-radius: 3px;
+      padding: 0px 5px 0px 5px; }
     .switcher .space-switcher-results .organization {
       border-top: 1px solid rgba(200, 200, 200, 0.77); }
       .switcher .space-switcher-results .organization .column-image {

@@ -1,7 +1,12 @@
 var events = require('../events');
 var React = require('react');
 var api = require('../api');
+var _ = require('lodash');
+var MAX_NUMBER_SPACES = 7;
 
+/**
+* Each space result on the list
+**/
 var SpaceRow = React.createClass({
   getInitialState: function() {
     return this.props.space;
@@ -15,6 +20,9 @@ var SpaceRow = React.createClass({
   }
 });
 
+/*
+* Each organization row on the results.
+*/
 var OrganizationBlock = React.createClass({
   getInitialState: function() {
     return this.props.org;
@@ -42,11 +50,59 @@ var OrganizationBlock = React.createClass({
   }
 });
 
+/**
+* Searcher
+**/
+var SearcherSpaces = React.createClass({
+  getInitialState: function() {
+    //Reset on esc
+    events.suscribe('escape', 'SpaceSwitcherSearcher', function(){
+      this.setState({
+        text: ''
+      });
+    }.bind(this));
 
+    return {
+      text: ''
+    }
+  },
+  handleChange: function(event){
+    var filter = event.target.value;
+    this.setState({
+      text: filter
+    });
+    console.log(filter);
+  },
+  render: function() {
+    return (
+      <div className="space-switcher-searcher-wrapper">
+        <span className="glyphicon glyphicon-search"></span>
+        <input type="text" value={this.state.text} onChange={this.handleChange}></input>
+      </div>
+    );
+  }
+});
+
+
+/**
+* Space switcher filter and list
+**/
 var SpaceSwitcherList = React.createClass({
   getInitialState: function() {
+    events.suscribe('filter', 'SpaceSwitcherList', function(opts){
+      this.setState({
+        organizations: opts.results
+      });
+    });
+
+    var amountOfSpaces = this.props.originalObj
+      .reduce(function(prev, next){ 
+        return prev.spaces.length + next.spaces.length 
+      });
+
     return {
-      organizations: this.props.organizations
+      organizations: this.props.organizations,
+      amountOfSpaces: amountOfSpaces
     }
   },
   render: function() {
@@ -54,27 +110,35 @@ var SpaceSwitcherList = React.createClass({
     this.state.organizations.forEach(function(org) {
       rows.push(<OrganizationBlock org={org} />);
     });
+
+    var searcher = null;
+    if(this.state.amountOfSpaces > MAX_NUMBER_SPACES){
+      searcher = <SearcherSpaces organizations={this.state.originalObj} />
+    }
+
     return (
       <div className="space-switcher-results">
+        {searcher}
         {rows}
       </div>
     );
   }
 });
 
-
 var SpaceSwitcher = React.createClass({
   getInitialState: function() {
     var defaultValue = this.props.data ? this.props.data : [];
+    var originalObj = _.cloneDeep(defaultValue);
 
-    //For async load
     if(this.props.endpoint){
-      //Could be considered to use promises instead event communication,
-      //But this would be reusable for other components
+      //Could be considered to use promises instead of event communication
       events.suscribe('spaces', 'SpaceSwitcher', function(organizations){
         if(this.isMounted()){
+          originalObj = _.cloneDeep(organizations);
+
           this.setState({ 
-            organizations: organizations
+            organizations: organizations,
+            originalObj: originalObj
           });
         }
       }.bind(this));
@@ -85,29 +149,33 @@ var SpaceSwitcher = React.createClass({
       });
     }
 
+    //Reset on esc
+    events.suscribe('escape', 'SpaceSwitcher', function(){
+      this.setState({
+        opened: false,
+        organizations: originalObj
+      });
+    }.bind(this));
+
     return {
       organizations: defaultValue,
+      originalObj: originalObj,
       opened: false
     };
   },
-  handleChange: function(field, event){
-    var nextState = {}
-    nextState[field] = event.target.value;
-    this.setState(nextState)
-  },
-  handleClick: function(){
+  changeState: function(){
     this.setState({
       opened: !this.state.opened
     });
   },
   render: function() {
-    var content = this.state.opened ? <SpaceSwitcherList organizations={this.state.organizations} /> : null;
+    var content = this.state.opened ? <SpaceSwitcherList organizations={this.state.organizations} originalObj={this.state.originalObj} /> : null;
     var iconClass = this.state.opened ? 'glyphicon glyphicon-chevron-up' : 'glyphicon glyphicon-chevron-down';
     var wrapperClass = this.state.opened ? 'space-switcher-title opened' : 'space-switcher-title closed';
 
     return (
       <div className="space-switcher">
-        <div className={wrapperClass} onClick={this.handleClick}>
+        <div className={wrapperClass} onClick={this.changeState}>
           <div>Go to space <span className={iconClass}></span></div>
         </div>
         {content}
