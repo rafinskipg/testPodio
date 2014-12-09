@@ -5,6 +5,7 @@
 var app = require('./app.jsx');
 var events = require('./events.js');
 
+//Some useful triggers
 function initEvents(){
   $(window).on('click', function(event){
     events.trigger('windowClicked', event);
