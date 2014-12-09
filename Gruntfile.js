@@ -33,7 +33,7 @@ module.exports = function (grunt) {
         tasks: ['wiredep']
       },
       js: {
-        files: ['<%= config.app %>/scripts/{,*/}*.js'],
+        files: ['<%= config.app %>/scripts/{,*/}*.{js, jsx}'],
         tasks: ['browserify'],
         options: {
           livereload: 33333
@@ -319,7 +319,16 @@ module.exports = function (grunt) {
     },
 
     browserify: {
+      options: {
+        debug: true,
+        transform: ['reactify'],
+        extensions: ['.jsx'],
+      },
       dist: {
+        options: {
+          external: ['react/addons'],
+          alias: ['react:']  // Make React available externally for dev tools
+        },
         files: {
           'app/bundle.js': ['app/scripts/main.js'],
         }
