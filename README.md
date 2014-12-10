@@ -48,12 +48,13 @@ grunt serve
 So, following theese indications: 
 
 - [x] Boilerplate the enviroment
-- [x] Write the README.md
-- [x] Write a component for loading the spaces json
-- [ ] Create a component that lists the organizations and their spaces
-- [ ] Add a toggable behaviour to that component
-- [ ] Add a searcher
-- [ ] Reset the results on delete
+- [x] Write the README.md including the requirements and the documentation on how to launch the environment.
+- [x] Write a component for loading the spaces through ajax.
+- [x] Create a component that lists the organizations and their spaces
+- [x] Add a toggable behaviour on click for this component. Close it if I press "esc" or click outside it.
+- [x] Create a searcher component, that receives text input and triggers an event with the result.
+- [x] Reset the results on delete when the users hits the "delete" key.
+- [x] Highlight the part of the text that matches the filter of the searcher
 - [ ] Add key up / key down behaviour for navigating though the results
 
 

@@ -1,6 +1,6 @@
 var events = require('../events');
 var React = require('react');
-
+var _ = require('lodash');
 /**
 * Searcher
 **/
@@ -27,10 +27,54 @@ var SearcherSpaces = React.createClass({
   },
   filter: function(value){
     if(this.resetResults){
-      events.trigger('filterspaces', '');
+      this.filterOrganizations('');
     }else{
-      events.trigger('filterspaces', value);
+      this.filterOrganizations(value);
     }
+  },
+  filterOrganizations: function(textToFilterBy){
+
+    function nameMeetsFilter(name){
+      return name.toLowerCase().indexOf(textToFilterBy.toLowerCase()) != -1;
+    }
+
+    //Filters the spaces of the organization
+    function spacesMeetsCriteria(organization){
+      organization.spaces = _.compact(
+        organization.spaces
+        .map(function(space){
+          if(nameMeetsFilter(space.name)){
+            return space;
+          }
+        })
+      );
+
+      return organization;
+    }
+
+    //Returns the organizations that have more than 0 spaces matching or it's name matches
+    function organizationMeetsCriteria(organization){
+      if(organization.spaces.length > 0 || nameMeetsFilter(organization.name)){
+        return organization;
+      }
+    }
+
+    //Function that applies the above filters to the data
+    function filter(organizations){
+      return _.compact(
+        _.cloneDeep(organizations)
+        .map(spacesMeetsCriteria)
+        .map(organizationMeetsCriteria)
+      );
+    }
+
+    //If textToFilterBy == '' avoid filtering.
+    var orgsFiltered = textToFilterBy ? filter(this.props.originalObj) : this.props.originalObj;
+
+    events.trigger('spacesFiltered', {
+      organizations: orgsFiltered,
+      filterBy: textToFilterBy
+    });
   },
   render: function() {
     return (

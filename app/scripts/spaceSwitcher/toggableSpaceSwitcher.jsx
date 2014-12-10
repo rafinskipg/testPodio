@@ -17,7 +17,7 @@ var SpaceRow = React.createClass({
       var strBegin = str.slice(0, start);
       var strMid = str.slice(start, end);
       var strEnd = str.slice(end, str.length);
-      
+
       return (<div>{strBegin}<span className="highlighted-str">{strMid}</span>{strEnd}</div>);
     }
 
@@ -63,7 +63,7 @@ var OrganizationBlock = React.createClass({
 **/
 var SpaceSwitcherList = React.createClass({
   getInitialState: function() {
-    events.suscribe('filterspaces', 'SpaceSwitcherList', this.filterOrganizations.bind(this));
+    events.suscribe('spacesFiltered', 'SpaceSwitcherList', this.spacesFiltered.bind(this));
 
     var amountOfSpaces = this.props.originalObj
       .reduce(function(prev, next){ 
@@ -75,48 +75,10 @@ var SpaceSwitcherList = React.createClass({
       amountOfSpaces: amountOfSpaces
     }
   },
-  filterOrganizations: function(textToFilterBy){
-
-    function nameMeetsFilter(name){
-      return name.toLowerCase().indexOf(textToFilterBy.toLowerCase()) != -1;
-    }
-
-    //Filters the spaces of the organization
-    function spacesMeetsCriteria(organization){
-      organization.spaces = _.compact(
-        organization.spaces
-        .map(function(space){
-          if(nameMeetsFilter(space.name)){
-            return space;
-          }
-        })
-      );
-
-      return organization;
-    }
-
-    //Returns the organizations that have more than 0 spaces matching or it's name matches
-    function organizationMeetsCriteria(organization){
-      if(organization.spaces.length > 0 || nameMeetsFilter(organization.name)){
-        return organization;
-      }
-    }
-
-    //Function that applies the above filters to the data
-    function filter(organizations){
-      return _.compact(
-        _.cloneDeep(organizations)
-        .map(spacesMeetsCriteria)
-        .map(organizationMeetsCriteria)
-      );
-    }
-
-    //If textToFilterBy == '' avoid filtering.
-    var orgsFiltered = textToFilterBy ? filter(this.props.originalObj) : this.props.originalObj;
-
-    this.setState({
-      organizations: orgsFiltered,
-      filterBy: textToFilterBy
+  spacesFiltered: function(opts){
+     this.setState({
+      organizations: opts.organizations,
+      filterBy: opts.filterBy
     });
   },
   render: function() {
@@ -128,7 +90,7 @@ var SpaceSwitcherList = React.createClass({
 
     var searcher = null;
     if(this.state.amountOfSpaces > MAX_NUMBER_SPACES){
-      searcher = <SearcherSpaces />
+      searcher = <SearcherSpaces originalObj={this.props.originalObj}/>
     }
 
     return (

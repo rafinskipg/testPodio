@@ -188,7 +188,7 @@ module.exports = require('./toggableSpaceSwitcher.jsx');
 },{"./toggableSpaceSwitcher.jsx":9}],8:[function(require,module,exports){
 var events = require('../events');
 var React = require('react');
-
+var _ = require('lodash');
 /**
 * Searcher
 **/
@@ -215,10 +215,54 @@ var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
   },
   filter: function(value){
     if(this.resetResults){
-      events.trigger('filterspaces', '');
+      this.filterOrganizations('');
     }else{
-      events.trigger('filterspaces', value);
+      this.filterOrganizations(value);
     }
+  },
+  filterOrganizations: function(textToFilterBy){
+
+    function nameMeetsFilter(name){
+      return name.toLowerCase().indexOf(textToFilterBy.toLowerCase()) != -1;
+    }
+
+    //Filters the spaces of the organization
+    function spacesMeetsCriteria(organization){
+      organization.spaces = _.compact(
+        organization.spaces
+        .map(function(space){
+          if(nameMeetsFilter(space.name)){
+            return space;
+          }
+        })
+      );
+
+      return organization;
+    }
+
+    //Returns the organizations that have more than 0 spaces matching or it's name matches
+    function organizationMeetsCriteria(organization){
+      if(organization.spaces.length > 0 || nameMeetsFilter(organization.name)){
+        return organization;
+      }
+    }
+
+    //Function that applies the above filters to the data
+    function filter(organizations){
+      return _.compact(
+        _.cloneDeep(organizations)
+        .map(spacesMeetsCriteria)
+        .map(organizationMeetsCriteria)
+      );
+    }
+
+    //If textToFilterBy == '' avoid filtering.
+    var orgsFiltered = textToFilterBy ? filter(this.props.originalObj) : this.props.originalObj;
+
+    events.trigger('spacesFiltered', {
+      organizations: orgsFiltered,
+      filterBy: textToFilterBy
+    });
   },
   render: function() {
     return (
@@ -231,7 +275,7 @@ var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
 });
 
 module.exports = SearcherSpaces;
-},{"../events":4,"react":"react"}],9:[function(require,module,exports){
+},{"../events":4,"lodash":11,"react":"react"}],9:[function(require,module,exports){
 var events = require('../events');
 var React = require('react');
 var api = require('../api');
@@ -251,7 +295,7 @@ var SpaceRow = React.createClass({displayName: 'SpaceRow',
       var strBegin = str.slice(0, start);
       var strMid = str.slice(start, end);
       var strEnd = str.slice(end, str.length);
-      
+
       return (React.createElement("div", null, strBegin, React.createElement("span", {className: "highlighted-str"}, strMid), strEnd));
     }
 
@@ -297,7 +341,7 @@ var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
 **/
 var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
   getInitialState: function() {
-    events.suscribe('filterspaces', 'SpaceSwitcherList', this.filterOrganizations.bind(this));
+    events.suscribe('spacesFiltered', 'SpaceSwitcherList', this.spacesFiltered.bind(this));
 
     var amountOfSpaces = this.props.originalObj
       .reduce(function(prev, next){ 
@@ -309,48 +353,10 @@ var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
       amountOfSpaces: amountOfSpaces
     }
   },
-  filterOrganizations: function(textToFilterBy){
-
-    function nameMeetsFilter(name){
-      return name.toLowerCase().indexOf(textToFilterBy.toLowerCase()) != -1;
-    }
-
-    //Filters the spaces of the organization
-    function spacesMeetsCriteria(organization){
-      organization.spaces = _.compact(
-        organization.spaces
-        .map(function(space){
-          if(nameMeetsFilter(space.name)){
-            return space;
-          }
-        })
-      );
-
-      return organization;
-    }
-
-    //Returns the organizations that have more than 0 spaces matching or it's name matches
-    function organizationMeetsCriteria(organization){
-      if(organization.spaces.length > 0 || nameMeetsFilter(organization.name)){
-        return organization;
-      }
-    }
-
-    //Function that applies the above filters to the data
-    function filter(organizations){
-      return _.compact(
-        _.cloneDeep(organizations)
-        .map(spacesMeetsCriteria)
-        .map(organizationMeetsCriteria)
-      );
-    }
-
-    //If textToFilterBy == '' avoid filtering.
-    var orgsFiltered = textToFilterBy ? filter(this.props.originalObj) : this.props.originalObj;
-
-    this.setState({
-      organizations: orgsFiltered,
-      filterBy: textToFilterBy
+  spacesFiltered: function(opts){
+     this.setState({
+      organizations: opts.organizations,
+      filterBy: opts.filterBy
     });
   },
   render: function() {
@@ -362,7 +368,7 @@ var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
 
     var searcher = null;
     if(this.state.amountOfSpaces > MAX_NUMBER_SPACES){
-      searcher = React.createElement(SearcherSpaces, null)
+      searcher = React.createElement(SearcherSpaces, {originalObj: this.props.originalObj})
     }
 
     return (
