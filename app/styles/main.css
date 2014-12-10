@@ -144,6 +144,6 @@ img {
           color: grey; }
           .switcher .space-switcher-results .organization .column-results .space:active, .switcher .space-switcher-results .organization .column-results .space:hover {
             background: rgba(80, 146, 189, 0.27); }
-          .switcher .space-switcher-results .organization .column-results .space .highlighted {
+          .switcher .space-switcher-results .organization .column-results .space .highlighted-str {
             font-style: italic;
             background: yellow; }

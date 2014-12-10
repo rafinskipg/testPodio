@@ -17,14 +17,12 @@ function suscribe (fnNames, originModule, fn, errCb){
     //Avoid various suscriptions with the same origin
     if(!suscribed[fnName]){
       suscribed[fnName] = {};
-      suscribed[fnName][originModule] = fn;
-    }else{
-      suscribed[fnName][originModule] = fn;
     }
+
+    suscribed[fnName][originModule] = fn;
 
     eventEmitter.on(fnName, fn);
     eventEmitter.on('error'+fn, errCb)
-    
   });
 }
 

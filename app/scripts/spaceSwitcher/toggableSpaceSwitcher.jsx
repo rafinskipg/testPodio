@@ -2,6 +2,7 @@ var events = require('../events');
 var React = require('react');
 var api = require('../api');
 var _ = require('lodash');
+var SearcherSpaces = require('./searcherSpaces.jsx')
 var MAX_NUMBER_SPACES = 7;
 
 /**
@@ -9,9 +10,22 @@ var MAX_NUMBER_SPACES = 7;
 **/
 var SpaceRow = React.createClass({
   render: function() {
+
+    function addHighlightedSpan(str, filter){
+      var start = str.toLowerCase().indexOf(filter.toLowerCase());
+      var end = start + filter.length;
+      var strBegin = str.slice(0, start);
+      var strMid = str.slice(start, end);
+      var strEnd = str.slice(end, str.length);
+      
+      return (<div>{strBegin}<span className="highlighted-str">{strMid}</span>{strEnd}</div>);
+    }
+
+    var name = this.props.filterBy ? addHighlightedSpan(this.props.space.name, this.props.filterBy) : this.props.space.name;
+
     return (
       <div className="space">
-        {this.props.space.name}
+        {name}
       </div>
     );
   }
@@ -22,10 +36,9 @@ var SpaceRow = React.createClass({
 */
 var OrganizationBlock = React.createClass({
   render: function() {
-    var rows = [];
-    
-    this.props.org.spaces.forEach(function(space) {
-      rows.push(<SpaceRow space={space} />);
+    var filter = this.props.filterBy;
+    var rows = this.props.org.spaces.map(function(space) {
+      return(<SpaceRow space={space} filterBy={filter}/>);
     });
 
     return (
@@ -39,58 +52,6 @@ var OrganizationBlock = React.createClass({
             {rows}
           </div>
         </div>
-      </div>
-    );
-  }
-});
-
-/**
-* Searcher
-**/
-var SearcherSpaces = React.createClass({
-  getInitialState: function() {
-    //Reset on esc
-    events.suscribe('escape', 'SpaceSwitcherSearcher', function(){
-      this.componentDidMount = function(){
-        console.log('op')
-        this.setState({
-          text: ''
-        })
-      }.bind(this);
-
-    }.bind(this));
-
-    return {
-      text: ''
-    }
-  },
-  handleChange: function(event){
-    var filter = event.target.value;
-    this.setState({
-      text: filter
-    });
-
-    this.filter(filter);
-  },
-  handleKeyDown: function(e){
-    if(e.which === 8){
-      this.resetResults = true;
-    }else{
-      this.resetResults = false;
-    }
-  },
-  filter: function(value){
-    if(this.resetResults){
-      events.trigger('filterspaces', '');
-    }else{
-      events.trigger('filterspaces', value);
-    }
-  },
-  render: function() {
-    return (
-      <div className="space-switcher-searcher-wrapper">
-        <span className="glyphicon glyphicon-search"></span>
-        <input type="text" value={this.state.text} onChange={this.handleChange} onKeyDown={this.handleKeyDown}></input>
       </div>
     );
   }
@@ -114,53 +75,55 @@ var SpaceSwitcherList = React.createClass({
       amountOfSpaces: amountOfSpaces
     }
   },
-  filterOrganizations: function(textToFilter){
-    console.log('filtering by ', textToFilter)
-    function filterSpaces(filter){
-      return function(organization){
-        var spacesFiltered = _.compact(
-          organization.spaces
-          .map(function(space){
-            if(space.name.toLowerCase().indexOf(filter.toLowerCase()) != -1){
-              return space;
-            }
-          })
-        );
+  filterOrganizations: function(textToFilterBy){
 
-        organization.spaces = spacesFiltered;
+    function nameMeetsFilter(name){
+      return name.toLowerCase().indexOf(textToFilterBy.toLowerCase()) != -1;
+    }
 
+    //Filters the spaces of the organization
+    function spacesMeetsCriteria(organization){
+      organization.spaces = _.compact(
+        organization.spaces
+        .map(function(space){
+          if(nameMeetsFilter(space.name)){
+            return space;
+          }
+        })
+      );
+
+      return organization;
+    }
+
+    //Returns the organizations that have more than 0 spaces matching or it's name matches
+    function organizationMeetsCriteria(organization){
+      if(organization.spaces.length > 0 || nameMeetsFilter(organization.name)){
         return organization;
       }
     }
 
-    function hasElementsMatching(filter){
-      return function(organization){
-        if(organization.spaces.length > 0 || organization.name.toLowerCase().indexOf(filter.toLowerCase()) != -1){
-          console.log('espaces', organization.spaces)
-          return organization;
-        }
-        
-      }
-    }
-
+    //Function that applies the above filters to the data
     function filter(organizations){
       return _.compact(
         _.cloneDeep(organizations)
-        .map(filterSpaces(textToFilter))
-        .map(hasElementsMatching(textToFilter))
+        .map(spacesMeetsCriteria)
+        .map(organizationMeetsCriteria)
       );
     }
 
-    var orgsFiltered = textToFilter ? filter(this.props.originalObj) : this.props.originalObj;
+    //If textToFilterBy == '' avoid filtering.
+    var orgsFiltered = textToFilterBy ? filter(this.props.originalObj) : this.props.originalObj;
 
     this.setState({
-      organizations: orgsFiltered
+      organizations: orgsFiltered,
+      filterBy: textToFilterBy
     });
   },
   render: function() {
-    var rows = [];
-    this.state.organizations.forEach(function(org) {
-      rows.push(<OrganizationBlock org={org} />);
+    var filterBy = this.state.filterBy;
+
+    var rows = this.state.organizations.map(function(org) {
+      return(<OrganizationBlock org={org} filterBy={filterBy}/>);
     });
 
     var searcher = null;

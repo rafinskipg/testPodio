@@ -16,7 +16,6 @@ function list(){
   return errors;
 }
 
-
 window.errLog4js = module.exports = {
   add: add,
   list : list
