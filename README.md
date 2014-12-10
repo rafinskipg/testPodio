@@ -55,7 +55,8 @@ So, following theese indications:
 - [x] Create a searcher component, that receives text input and triggers an event with the result.
 - [x] Reset the results on delete when the users hits the "delete" key.
 - [x] Highlight the part of the text that matches the filter of the searcher
-- [ ] Add key up / key down behaviour for navigating though the results
+- [x] Add key up / key down behaviour for navigating though the results
+- [ ] Bonus, add scroll behaviour. Limit to 80vh (done), center the results while scrolling (todo)
 
 
 ### Contribute

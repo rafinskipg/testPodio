@@ -19,19 +19,26 @@ function suscribe (fnNames, originModule, fn, errCb){
     //Avoid various suscriptions with the same origin
     if(!suscribed[fnName]){
       suscribed[fnName] = {};
+    }else if(suscribed[fnName][originModule]){
+      eventEmitter.removeListener(fnName, suscribed[fnName][originModule].fn);
+      eventEmitter.removeListener('error'+fnName, suscribed[fnName][originModule].errCb);
     }
 
-    suscribed[fnName][originModule] = fn;
+    suscribed[fnName][originModule] = {
+      fn: fn,
+      errCb: errCb
+    };
 
     eventEmitter.on(fnName, fn);
-    eventEmitter.on('error'+fn, errCb)
+    eventEmitter.on('error'+fnName, errCb)
   });
 }
 
 function resetSuscriptions(){
   _.forIn(suscribed, function(itemValue, fnName){
-    _.forIn(itemValue, function(suscribedFunction){
-      eventEmitter.removeListener(fnName,suscribedFunction);
+    _.forIn(itemValue, function(opts){
+      eventEmitter.removeListener(fnName,opts.fn);
+      eventEmitter.removeListener(fnName,otps.errCb);
     });
   });
 }

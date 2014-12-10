@@ -86,13 +86,12 @@ var OrganizationBlock = React.createClass({
   }
 });
 
-
 /**
 * Space switcher filter and list
 **/
 var SpaceSwitcherList = React.createClass({
   getInitialState: function() {
-    events.suscribe('spacesFiltered', 'SpaceSwitcherList', this.spacesFiltered.bind(this));
+    events.suscribe('spacesFiltered', 'SpaceSwitcherList', this.spacesFiltered);
 
     var amountOfSpaces = this.props.originalObj
       .reduce(function(prev, next){ 
@@ -105,10 +104,12 @@ var SpaceSwitcherList = React.createClass({
     }
   },
   spacesFiltered: function(opts){
-     this.setState({
-      organizations: opts.organizations,
-      filterBy: opts.filterBy
-    });
+    if(this.isMounted()){
+      this.setState({
+        organizations: opts.organizations,
+        filterBy: opts.filterBy
+      });
+    }
   },
   render: function() {
     var filterBy = this.state.filterBy;
@@ -131,6 +132,10 @@ var SpaceSwitcherList = React.createClass({
   }
 });
 
+/**
+* Toggable parent component. Renders everything.
+* Accepts a endpoint url or a data object.
+**/
 var SpaceSwitcher = React.createClass({
   getInitialState: function() {
     var defaultValue = this.props.data ? this.props.data : [];
@@ -140,15 +145,14 @@ var SpaceSwitcher = React.createClass({
       //Could be considered to use promises instead of event communication
       events.suscribe('spaces', 'SpaceSwitcher', function(organizations){
         if(this.isMounted()){
-          originalObj = _.cloneDeep(organizations);
-
           this.setState({ 
             organizations: organizations,
-            originalObj: originalObj
+            originalObj: _.cloneDeep(organizations)
           });
         }
       }.bind(this));
 
+      //Get the spaces
       api.fetch({
         name: 'spaces',
         path: this.props.endpoint
@@ -157,10 +161,14 @@ var SpaceSwitcher = React.createClass({
 
     //Reset on esc
     events.suscribe('escape', 'SpaceSwitcher', function(){
-      this.setState({
-        opened: false,
-        organizations: originalObj
-      });
+      this.resetState();
+    }.bind(this));
+
+    //Reset on click outside
+    events.suscribe('windowClicked', 'SpaceSwitcher', function(e){
+      if(!$(e.target).closest('.switcher').length) {
+        this.resetState();
+      }
     }.bind(this));
 
     return {
@@ -173,6 +181,14 @@ var SpaceSwitcher = React.createClass({
     this.setState({
       opened: !this.state.opened
     });
+  },
+  resetState: function(){
+    if(this.isMounted()){
+      this.setState({
+        opened: false,
+        organizations: this.state.originalObj
+      });
+    }
   },
   render: function() {
     var content = this.state.opened ? <SpaceSwitcherList organizations={this.state.organizations} originalObj={this.state.originalObj} /> : null;

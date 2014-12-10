@@ -123,19 +123,26 @@ function suscribe (fnNames, originModule, fn, errCb){
     //Avoid various suscriptions with the same origin
     if(!suscribed[fnName]){
       suscribed[fnName] = {};
+    }else if(suscribed[fnName][originModule]){
+      eventEmitter.removeListener(fnName, suscribed[fnName][originModule].fn);
+      eventEmitter.removeListener('error'+fnName, suscribed[fnName][originModule].errCb);
     }
 
-    suscribed[fnName][originModule] = fn;
+    suscribed[fnName][originModule] = {
+      fn: fn,
+      errCb: errCb
+    };
 
     eventEmitter.on(fnName, fn);
-    eventEmitter.on('error'+fn, errCb)
+    eventEmitter.on('error'+fnName, errCb)
   });
 }
 
 function resetSuscriptions(){
   _.forIn(suscribed, function(itemValue, fnName){
-    _.forIn(itemValue, function(suscribedFunction){
-      eventEmitter.removeListener(fnName,suscribedFunction);
+    _.forIn(itemValue, function(opts){
+      eventEmitter.removeListener(fnName,opts.fn);
+      eventEmitter.removeListener(fnName,otps.errCb);
     });
   });
 }
@@ -415,13 +422,12 @@ var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
   }
 });
 
-
 /**
 * Space switcher filter and list
 **/
 var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
   getInitialState: function() {
-    events.suscribe('spacesFiltered', 'SpaceSwitcherList', this.spacesFiltered.bind(this));
+    events.suscribe('spacesFiltered', 'SpaceSwitcherList', this.spacesFiltered);
 
     var amountOfSpaces = this.props.originalObj
       .reduce(function(prev, next){ 
@@ -434,10 +440,12 @@ var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
     }
   },
   spacesFiltered: function(opts){
-     this.setState({
-      organizations: opts.organizations,
-      filterBy: opts.filterBy
-    });
+    if(this.isMounted()){
+      this.setState({
+        organizations: opts.organizations,
+        filterBy: opts.filterBy
+      });
+    }
   },
   render: function() {
     var filterBy = this.state.filterBy;
@@ -460,6 +468,10 @@ var SpaceSwitcherList = React.createClass({displayName: 'SpaceSwitcherList',
   }
 });
 
+/**
+* Toggable parent component. Renders everything.
+* Accepts a endpoint url or a data object.
+**/
 var SpaceSwitcher = React.createClass({displayName: 'SpaceSwitcher',
   getInitialState: function() {
     var defaultValue = this.props.data ? this.props.data : [];
@@ -469,15 +481,14 @@ var SpaceSwitcher = React.createClass({displayName: 'SpaceSwitcher',
       //Could be considered to use promises instead of event communication
       events.suscribe('spaces', 'SpaceSwitcher', function(organizations){
         if(this.isMounted()){
-          originalObj = _.cloneDeep(organizations);
-
           this.setState({ 
             organizations: organizations,
-            originalObj: originalObj
+            originalObj: _.cloneDeep(organizations)
           });
         }
       }.bind(this));
 
+      //Get the spaces
       api.fetch({
         name: 'spaces',
         path: this.props.endpoint
@@ -486,10 +497,14 @@ var SpaceSwitcher = React.createClass({displayName: 'SpaceSwitcher',
 
     //Reset on esc
     events.suscribe('escape', 'SpaceSwitcher', function(){
-      this.setState({
-        opened: false,
-        organizations: originalObj
-      });
+      this.resetState();
+    }.bind(this));
+
+    //Reset on click outside
+    events.suscribe('windowClicked', 'SpaceSwitcher', function(e){
+      if(!$(e.target).closest('.switcher').length) {
+        this.resetState();
+      }
     }.bind(this));
 
     return {
@@ -502,6 +517,14 @@ var SpaceSwitcher = React.createClass({displayName: 'SpaceSwitcher',
     this.setState({
       opened: !this.state.opened
     });
+  },
+  resetState: function(){
+    if(this.isMounted()){
+      this.setState({
+        opened: false,
+        organizations: this.state.originalObj
+      });
+    }
   },
   render: function() {
     var content = this.state.opened ? React.createElement(SpaceSwitcherList, {organizations: this.state.organizations, originalObj: this.state.originalObj}) : null;
