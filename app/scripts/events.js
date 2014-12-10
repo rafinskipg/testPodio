@@ -2,6 +2,8 @@
 
 var events = require('events');
 var eventEmitter = new events.EventEmitter();
+eventEmitter.setMaxListeners(100);
+
 var _ = require('lodash');
 var errorLogger = require('./errorLogger');
 var suscribed = {};

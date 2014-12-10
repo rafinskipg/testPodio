@@ -106,6 +106,8 @@ window.errLog4js = module.exports = {
 
 var events = require('events');
 var eventEmitter = new events.EventEmitter();
+eventEmitter.setMaxListeners(100);
+
 var _ = require('lodash');
 var errorLogger = require('./errorLogger');
 var suscribed = {};
@@ -194,6 +196,9 @@ var _ = require('lodash');
 **/
 var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
   getInitialState: function() {
+    this._organizations = this.props.originalObj;
+    this._selectionIndex = 0;
+
     return {
       text: ''
     }
@@ -209,8 +214,49 @@ var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
   handleKeyDown: function(e){
     if(e.which === 8){
       this.resetResults = true;
+    }else if(e.which === 40){
+      this.select(1);
+      e.preventDefault();
+    }else if(e.which === 38){
+      this.select(-1);
+      e.preventDefault();
+    }else if(e.which === 13){
+      e.preventDefault();
+      if(this.selection){
+        this.goToPage(this.selection);
+      }
     }else{
       this.resetResults = false;
+    }
+  },
+  getItems : function(){
+    var elems = [];
+    this._organizations.forEach(function(org){
+      elems.push(org);
+      org.spaces.forEach(function(space){
+        elems.push(space);
+      });
+    });
+    return elems;
+  },
+  select: function(modifier){
+    this._selectionIndex += modifier;
+
+    if(this._selectionIndex  < 0){
+      this._selectionIndex = this.getItems().length - 1;
+    }else if(this._selectionIndex >= this.getItems().length){
+      this._selectionIndex = 0;
+    }
+
+    this.selection = this.getItems()[this._selectionIndex];
+    
+    if(this.selection){
+      events.trigger('selectItem', this.selection);  
+    }
+  },
+  goToPage: function(){
+    if(this.selection && this.selection.url){
+      window.location.href = this.selection.url;
     }
   },
   filter: function(value){
@@ -219,6 +265,9 @@ var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
     }else{
       this.filterOrganizations(value);
     }
+
+    this._selectionIndex = 0;
+    this.select(0);
   },
   filterOrganizations: function(textToFilterBy){
 
@@ -259,6 +308,8 @@ var SearcherSpaces = React.createClass({displayName: 'SearcherSpaces',
     //If textToFilterBy == '' avoid filtering.
     var orgsFiltered = textToFilterBy ? filter(this.props.originalObj) : this.props.originalObj;
 
+    this._organizations = orgsFiltered;
+
     events.trigger('spacesFiltered', {
       organizations: orgsFiltered,
       filterBy: textToFilterBy
@@ -287,6 +338,19 @@ var MAX_NUMBER_SPACES = 7;
 * Each space result on the list
 **/
 var SpaceRow = React.createClass({displayName: 'SpaceRow',
+  getInitialState: function(){
+    events.suscribe('selectItem', this.props.space.name, this.setItemSelected);
+    return {
+      space: this.props.space
+    }
+  },
+  setItemSelected: function(item){
+    if(this.isMounted()){
+      this.setState({
+        selected : item.id === this.props.space.id
+      });
+    }
+  },
   render: function() {
 
     function addHighlightedSpan(str, filter){
@@ -300,9 +364,10 @@ var SpaceRow = React.createClass({displayName: 'SpaceRow',
     }
 
     var name = this.props.filterBy ? addHighlightedSpan(this.props.space.name, this.props.filterBy) : this.props.space.name;
+    var className = this.state.selected ? "space active" : "space";
 
     return (
-      React.createElement("div", {className: "space"}, 
+      React.createElement("div", {className: className}, 
         name
       )
     );
@@ -313,8 +378,23 @@ var SpaceRow = React.createClass({displayName: 'SpaceRow',
 * Each organization row on the results.
 */
 var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
+  getInitialState: function(){
+    events.suscribe('selectItem', this.props.org.name, this.setItemSelected);
+    return {
+      org: this.props.org
+    }
+  },
+  setItemSelected: function(item){
+    if(this.isMounted()){
+      this.setState({
+        selected : item.id === this.props.org.id
+      });
+    }
+  },
   render: function() {
     var filter = this.props.filterBy;
+    var className = this.state.selected ? "organization-name active" : "organization-name";
+
     var rows = this.props.org.spaces.map(function(space) {
       return(React.createElement(SpaceRow, {space: space, filterBy: filter}));
     });
@@ -325,7 +405,7 @@ var OrganizationBlock = React.createClass({displayName: 'OrganizationBlock',
           React.createElement("img", {src: this.props.org.image.thumbnail_link})
         ), 
         React.createElement("div", {className: "col-xs-9 column-results"}, 
-          React.createElement("div", {className: "organization-name"}, this.props.org.name), 
+          React.createElement("div", {className: className}, this.props.org.name), 
           React.createElement("div", {className: "organization-spaces"}, 
             rows
           )

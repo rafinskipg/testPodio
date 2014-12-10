@@ -64,7 +64,7 @@
           font-weight: bold;
           padding: 5px;
           
-          &:active, &:hover{
+          &.active, &:hover{
             background: $activeBg;
           }    
         }
@@ -73,7 +73,7 @@
           padding: 0px 5px 0px 10px;
           color: grey;
 
-          &:active, &:hover{
+          &.active, &:hover{
             background: $activeBg;
           }
 

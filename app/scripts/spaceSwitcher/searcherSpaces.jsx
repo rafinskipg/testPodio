@@ -6,6 +6,9 @@ var _ = require('lodash');
 **/
 var SearcherSpaces = React.createClass({
   getInitialState: function() {
+    this._organizations = this.props.originalObj;
+    this._selectionIndex = 0;
+
     return {
       text: ''
     }
@@ -21,8 +24,49 @@ var SearcherSpaces = React.createClass({
   handleKeyDown: function(e){
     if(e.which === 8){
       this.resetResults = true;
+    }else if(e.which === 40){
+      this.select(1);
+      e.preventDefault();
+    }else if(e.which === 38){
+      this.select(-1);
+      e.preventDefault();
+    }else if(e.which === 13){
+      e.preventDefault();
+      if(this.selection){
+        this.goToPage(this.selection);
+      }
     }else{
       this.resetResults = false;
+    }
+  },
+  getItems : function(){
+    var elems = [];
+    this._organizations.forEach(function(org){
+      elems.push(org);
+      org.spaces.forEach(function(space){
+        elems.push(space);
+      });
+    });
+    return elems;
+  },
+  select: function(modifier){
+    this._selectionIndex += modifier;
+
+    if(this._selectionIndex  < 0){
+      this._selectionIndex = this.getItems().length - 1;
+    }else if(this._selectionIndex >= this.getItems().length){
+      this._selectionIndex = 0;
+    }
+
+    this.selection = this.getItems()[this._selectionIndex];
+    
+    if(this.selection){
+      events.trigger('selectItem', this.selection);  
+    }
+  },
+  goToPage: function(){
+    if(this.selection && this.selection.url){
+      window.location.href = this.selection.url;
     }
   },
   filter: function(value){
@@ -31,6 +75,9 @@ var SearcherSpaces = React.createClass({
     }else{
       this.filterOrganizations(value);
     }
+
+    this._selectionIndex = 0;
+    this.select(0);
   },
   filterOrganizations: function(textToFilterBy){
 
@@ -70,6 +117,8 @@ var SearcherSpaces = React.createClass({
 
     //If textToFilterBy == '' avoid filtering.
     var orgsFiltered = textToFilterBy ? filter(this.props.originalObj) : this.props.originalObj;
+
+    this._organizations = orgsFiltered;
 
     events.trigger('spacesFiltered', {
       organizations: orgsFiltered,

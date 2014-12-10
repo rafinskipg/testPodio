@@ -137,12 +137,12 @@ img {
           color: #5092BD;
           font-weight: bold;
           padding: 5px; }
-          .switcher .space-switcher-results .organization .column-results .organization-name:active, .switcher .space-switcher-results .organization .column-results .organization-name:hover {
+          .switcher .space-switcher-results .organization .column-results .organization-name.active, .switcher .space-switcher-results .organization .column-results .organization-name:hover {
             background: rgba(80, 146, 189, 0.27); }
         .switcher .space-switcher-results .organization .column-results .space {
           padding: 0px 5px 0px 10px;
           color: grey; }
-          .switcher .space-switcher-results .organization .column-results .space:active, .switcher .space-switcher-results .organization .column-results .space:hover {
+          .switcher .space-switcher-results .organization .column-results .space.active, .switcher .space-switcher-results .organization .column-results .space:hover {
             background: rgba(80, 146, 189, 0.27); }
           .switcher .space-switcher-results .organization .column-results .space .highlighted-str {
             font-style: italic;

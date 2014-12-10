@@ -9,6 +9,19 @@ var MAX_NUMBER_SPACES = 7;
 * Each space result on the list
 **/
 var SpaceRow = React.createClass({
+  getInitialState: function(){
+    events.suscribe('selectItem', this.props.space.name, this.setItemSelected);
+    return {
+      space: this.props.space
+    }
+  },
+  setItemSelected: function(item){
+    if(this.isMounted()){
+      this.setState({
+        selected : item.id === this.props.space.id
+      });
+    }
+  },
   render: function() {
 
     function addHighlightedSpan(str, filter){
@@ -22,9 +35,10 @@ var SpaceRow = React.createClass({
     }
 
     var name = this.props.filterBy ? addHighlightedSpan(this.props.space.name, this.props.filterBy) : this.props.space.name;
+    var className = this.state.selected ? "space active" : "space";
 
     return (
-      <div className="space">
+      <div className={className}>
         {name}
       </div>
     );
@@ -35,8 +49,23 @@ var SpaceRow = React.createClass({
 * Each organization row on the results.
 */
 var OrganizationBlock = React.createClass({
+  getInitialState: function(){
+    events.suscribe('selectItem', this.props.org.name, this.setItemSelected);
+    return {
+      org: this.props.org
+    }
+  },
+  setItemSelected: function(item){
+    if(this.isMounted()){
+      this.setState({
+        selected : item.id === this.props.org.id
+      });
+    }
+  },
   render: function() {
     var filter = this.props.filterBy;
+    var className = this.state.selected ? "organization-name active" : "organization-name";
+
     var rows = this.props.org.spaces.map(function(space) {
       return(<SpaceRow space={space} filterBy={filter}/>);
     });
@@ -47,7 +76,7 @@ var OrganizationBlock = React.createClass({
           <img src={this.props.org.image.thumbnail_link}></img>
         </div>
         <div className="col-xs-9 column-results">
-          <div className="organization-name">{this.props.org.name}</div>
+          <div className={className}>{this.props.org.name}</div>
           <div className="organization-spaces">
             {rows}
           </div>
