@@ -1,5 +1,7 @@
 # Space Switcher
 
+[Live demo](http://podiotest-173500.euw1-2.nitrousbox.com:9000/) 
+
 ## Implementation
 
 The space switcher is implemented as a React component. 
